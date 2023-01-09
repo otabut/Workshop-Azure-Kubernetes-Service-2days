@@ -1,0 +1,13 @@
+
+az group create --location "eastus2" --resource-group "RG-AKS-Lab-4"
+az network vnet create --resource-group "RG-AKS-Lab-4" --name AKSvnet --location "eastus2" --address-prefixes 10.0.0.0/8
+
+$SUBNET_ID=(az network vnet subnet create --resource-group "RG-AKS-Lab-4" --vnet-name AKSvnet --name subnetAKS --address-prefixes 10.240.0.0/16 --query id --output tsv)
+$IDENTITY_ID=(az identity create --resource-group "RG-AKS-Lab-4" --name idAks --location "eastus2" --query id --output tsv)
+
+az aks create --resource-group "RG-AKS-Lab-4" --name "AKS-Lab-4" --location "eastus2" --network-plugin azure --generate-ssh-keys --node-count 1 --enable-cluster-autoscaler --min-count 1 --max-count 3 --vnet-subnet-id $SUBNET_ID --enable-managed-identity --assign-identity $IDENTITY_ID --yes
+
+
+$AKS_MONITORING_LOG_ANALYTICS_WORKSPACE_ID=(az monitor log-analytics workspace create --resource-group "RG-AKS-Lab-4" --workspace-name "Workspace-AKS-Lab-4" --location "eastus2" --query id -o tsv)
+az aks enable-addons --addons monitoring --name "AKS-Lab-4" --resource-group "RG-AKS-Lab-4" --workspace-resource-id $AKS_MONITORING_LOG_ANALYTICS_WORKSPACE_ID
+

@@ -1,0 +1,10 @@
+az group create --location "eastus2" --resource-group "RG-AKS-CLI"
+az network public-ip create --resource-group "RG-AKS-CLI" --name natGatewaypIpAks --location "eastus2" --sku standard
+
+az network nat gateway create --resource-group "RG-AKS-CLI" --name natGatewayAks --location "eastus2" --public-ip-addresses natGatewaypIpAks
+az network vnet create --resource-group "RG-AKS-CLI" --name AKSvnet --location "eastus2" --address-prefixes 172.16.0.0/20
+
+$SUBNET_ID=(az network vnet subnet create --resource-group "RG-AKS-CLI" --vnet-name AKSvnet --name natclusterAKS --address-prefixes 172.16.0.0/22 --nat-gateway natGatewayAks --query id --output tsv)
+$IDENTITY_ID=(az identity create --resource-group "RG-AKS-CLI" --name idAks --location "eastus2" --query id --output tsv)
+
+az aks create --resource-group "RG-AKS-CLI" --name "AKS-CLI" --location "eastus2" --network-plugin azure --generate-ssh-keys --node-count 2 --enable-cluster-autoscaler --min-count 1 --max-count 3 --vnet-subnet-id $SUBNET_ID --outbound-type userAssignedNATGateway --enable-managed-identity --assign-identity $IDENTITY_ID --yes

@@ -1,0 +1,19 @@
+az group create --location "eastus2" --resource-group "RG-AKS-Lab-9"
+
+az network vnet create --resource-group "RG-AKS-Lab-9" --name AKSvnet --location "eastus2" --address-prefixes 10.0.0.0/8
+
+$SUBNET_ID=(az network vnet subnet create --resource-group "RG-AKS-Lab-9" --vnet-name AKSvnet --name subnetAKS --address-prefixes 10.240.0.0/16 --query id --output tsv)
+$IDENTITY_ID=(az identity create --resource-group "RG-AKS-Lab-9" --name idAks --location "eastus2" --query id --output tsv)
+az acr create --name "otaacrlab009" --resource-group "RG-AKS-Lab-9" --sku basic
+
+
+az aks create --resource-group "RG-AKS-Lab-9" --name "AKS-Lab-9" --location "eastus2" --network-plugin azure --generate-ssh-keys --node-count 2 --enable-cluster-autoscaler --min-count 1 --max-count 3 --vnet-subnet-id $SUBNET_ID --enable-managed-identity --assign-identity $IDENTITY_ID --attach-acr "otaacrlab009" --yes
+
+az aks get-credentials --resource-group RG-AKS-Lab-9 --name AKS-Lab-9
+
+az acr build -t api/api:1.0.0 -r "otaacrlab009" .
+az acr build -t api/api:2.0.0 -r "otaacrlab009" .
+
+
+
+kubectl set image api-deployment -n namespacelab9 api-deployment=acrlab009.azurecr.io/api/api:1.0.0

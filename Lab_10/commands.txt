@@ -1,0 +1,28 @@
+
+az group create --location "eastus2" --resource-group "RG-AKS-Lab-10"
+
+az network vnet create --resource-group "RG-AKS-Lab-10" --name AKSvnet --location "eastus2" --address-prefixes 10.0.0.0/8
+
+$SUBNET_ID=$(az network vnet subnet create --resource-group "RG-AKS-Lab-10" --vnet-name AKSvnet --name subnetAKS --address-prefixes 10.240.0.0/16 --query id --output tsv)
+$IDENTITY_ID=(az identity create --resource-group "RG-AKS-Lab-10" --name idAks --location "eastus2" --query id --output tsv)
+az acr create --name "otaacrlab0010" --resource-group "RG-AKS-Lab-10" --sku basic
+az aks create --resource-group "RG-AKS-Lab-10" --name "AKS-Lab-10" --location "eastus2" --network-plugin azure --generate-ssh-keys --node-count 2 --enable-cluster-autoscaler --min-count 1 --max-count 3 --vnet-subnet-id $SUBNET_ID --enable-managed-identity --assign-identity $IDENTITY_ID --attach-acr "otaacrlab0010" --yes
+
+
+az ad sp create-for-rbac --name "otabut-demo-githubaction2022" --role "Contributor" --scopes /subscriptions/5f70c216-f818-448c-a05c-72991ac42011 --sdk-auth -o jsonc
+
+
+{
+  "clientId": "7152afe1-df02-4733-b25c-ede6ed31a6e4",
+  "clientSecret": "Hxn8Q~FkPw1oQZR6peNEndAJ4Lgd27GbG6~Y6aZc",
+  "subscriptionId": "5f70c216-f818-448c-a05c-72991ac42011",
+  "tenantId": "93f33571-550f-43cf-b09f-cd331338d086",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
+
+
